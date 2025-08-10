@@ -1,0 +1,4 @@
+# js/opencv.js
+[OpenCV](https://github.com/opencv/opencv) 4.5.0
+
+License: Apache-2.0 license
