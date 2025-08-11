@@ -9,6 +9,8 @@ const ui = {
 
 let vid_capture_state = {
     streaming: false,
+    stream: null,
+    capture: null,
 };
 
 cv['onRuntimeInitialized'] = async () => {
@@ -18,7 +20,8 @@ cv['onRuntimeInitialized'] = async () => {
 function on_video_started() {
     vid_capture_state.streaming = true;
     ui.button_start_stop.innerText = 'Stop';
-    segmentation_state.timer = setTimeout(process_video_hsv_segmentation, 0);
+    vid_capture_state.capture = new cv.VideoCapture(ui.video_input);
+    segmentation_state.timer_id = setTimeout(process_video_hsv_segmentation, 0);
 }
 
 ui.button_start_stop.addEventListener('click', () => {
@@ -44,24 +47,33 @@ ui.button_start_stop.addEventListener('click', () => {
         vid_capture_state.streaming = false;
         ui.canvas_segmented_context.clearRect(0, 0, ui.canvas_segmented.width, ui.canvas_segmented.height);
         ui.button_start_stop.innerText = 'Start';
-        segmentation_state.timer = null;
+        if (segmentation_state.timer_id) {
+            clearTimeout(segmentation_state.timer_id);
+            segmentation_state.timer_id = null;
+        }
     }
 });
 
 let segmentation_state = {
-    timer: null,
-    fps: 30,
+    timer_id: null,
+    src: null,
+    dst: null,
 };
 
+const fps = 30;
 function process_video_hsv_segmentation() {
+    if (!segmentation_state.dst){
+        segmentation_state.dst = new cv.Mat(ui.video_input.height, ui.video_input.width, cv.CV_8UC4);
+    }
+    if (!segmentation_state.src){
+        segmentation_state.src = new cv.Mat(ui.video_input.height, ui.video_input.width, cv.CV_8UC4);
+    }
     const begin = Date.now();
-    ui.canvas_segmented_context.drawImage(ui.video, 0, 0, ui.canvas_segmented.width, ui.canvas_segmented.height);
-    src.data.set(ui.canvas_segmented_context.getImageData(0, 0, ui.canvas_segmented.width, ui.canvas_segmented.height).data);
-    dst = cv.Mat();
-    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-    cv.imshow("canvas_segmented_output", dst);
+    vid_capture_state.capture.read(segmentation_state.src);
+    cv.cvtColor(segmentation_state.src, segmentation_state.dst, cv.COLOR_RGBA2GRAY);
+    cv.imshow("canvas_segmented_output", segmentation_state.dst);
 
     // schedule next function call
     const delay = 1000/fps - (Date.now() - begin);
-    segmentation_state.timer = setTimeout(process_video_hsv_segmentation, delay);
+    segmentation_state.timer_id = setTimeout(process_video_hsv_segmentation, delay);
 }
