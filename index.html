@@ -3,15 +3,28 @@
 <head>
   <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Camera Analyzer</title>
+  <title>Pepper's Cone: Calibration Video Analyzer</title>
 
   <script src="js/opencv.js" type="text/javascript"></script>
 </head>
 <body>
-  <div>Hallo Weltle</div>
+  <h2>Pepper's Cone: Calibration Video Analyzer</h2>
 
-  <video id="video" autoplay playsinline width="320" height="240"></video>
-  <canvas id="canvasOutput" width="320" height="240"></canvas>
+  <div class="video-capture">
+    <h3>Video Capture</h3>
+    <div class="control"><button id="button_start_stop" disabled>Start</button></div>
+    <video id="video_input" autoplay playsinline width="320" height="240"></video>
+  </div>
+
+  <div class="slider-container">
+    <label>Hue 1 min <input type="range" id="hue1_min" min="0" max="179" value="35"></label></br>
+    <label>Hue 1 max <input type="range" id="hue1_max" min="0" max="179" value="85"></label></br>
+    <label>Hue 2 min <input type="range" id="hue2_min" min="0" max="179" value="35"></label></br>
+    <label>Hue 2 max <input type="range" id="hue2_max" min="0" max="179" value="85"></label>
+  </div>
+
+  <canvas id="canvas_segmented_output" width="320" height="240"></canvas>
+
   <script src="js/cam_analyzer.js" type="text/javascript"></script>
 </body>
 </html>
