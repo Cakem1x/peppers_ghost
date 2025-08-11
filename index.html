@@ -17,10 +17,9 @@
   </div>
 
   <div class="slider-container">
-    <label>Hue 1 min <input type="range" id="hue1_min" min="0" max="179" value="35"></label></br>
-    <label>Hue 1 max <input type="range" id="hue1_max" min="0" max="179" value="85"></label></br>
-    <label>Hue 2 min <input type="range" id="hue2_min" min="0" max="179" value="35"></label></br>
-    <label>Hue 2 max <input type="range" id="hue2_max" min="0" max="179" value="85"></label>
+    <label>Hue 1 center <input type="range" id="hue1_center" min="0" max="255" value="35"></label></br>
+    <label>Hue 1 interval size <input type="range" id="hue1_range" min="0" max="255" value="20"></label></br>
+    <label>Hue 1 range: </label><output id="output_hue1"/></br>
   </div>
 
   <canvas id="canvas_segmented_output" width="320" height="240"></canvas>

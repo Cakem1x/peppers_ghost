@@ -3,8 +3,11 @@ const ui = {
     canvas_segmented: document.getElementById('canvas_segmented_output'),
     canvas_segmented_context: document.getElementById('canvas_segmented_output').getContext('2d'),
     video_input: document.getElementById("video_input"),
-    hue1_min: document.getElementById('hue1_min'),
-    hue1_max: document.getElementById('hue1_max'),
+    hue1: {
+        center: document.getElementById('hue1_center'),
+        range: document.getElementById('hue1_range'),
+        output: document.getElementById("output_hue1"),
+    },
 };
 
 let vid_capture_state = {
@@ -57,23 +60,51 @@ ui.button_start_stop.addEventListener('click', () => {
 let segmentation_state = {
     timer_id: null,
     src: null,
-    dst: null,
+    hsv: null,
+    mask_hue1: null,
+    mask_hue2: null,
+    bgr: null,
 };
 
 const fps = 30;
 function process_video_hsv_segmentation() {
-    if (!segmentation_state.dst){
-        segmentation_state.dst = new cv.Mat(ui.video_input.height, ui.video_input.width, cv.CV_8UC4);
-    }
     if (!segmentation_state.src){
         segmentation_state.src = new cv.Mat(ui.video_input.height, ui.video_input.width, cv.CV_8UC4);
     }
+    if (!segmentation_state.hsv){
+        segmentation_state.hsv = new cv.Mat(ui.video_input.height, ui.video_input.width, cv.CV_8UC4);
+    }
+    if (!segmentation_state.mask_hue1){
+        segmentation_state.mask_hue1 = new cv.Mat(ui.video_input.height, ui.video_input.width, cv.CV_8UC1);
+    }
+    if (!segmentation_state.mask_hue2){
+        segmentation_state.mask_hue2 = new cv.Mat(ui.video_input.height, ui.video_input.width, cv.CV_8UC1);
+    }
+    if (!segmentation_state.dst){
+        segmentation_state.dst = new cv.Mat(ui.video_input.height, ui.video_input.width, cv.CV_8UC4);
+    }
+
+    // get input
     const begin = Date.now();
     vid_capture_state.capture.read(segmentation_state.src);
-    cv.cvtColor(segmentation_state.src, segmentation_state.dst, cv.COLOR_RGBA2GRAY);
+    cv.cvtColor(segmentation_state.src, segmentation_state.hsv, cv.COLOR_BGR2HSV);
+
+    // process
+    const min_hue = Math.max(parseFloat(ui.hue1.center.value) - parseFloat(ui.hue1.range.value), 0);
+    const max_hue = Math.min(parseFloat(ui.hue1.center.value) + parseFloat(ui.hue1.range.value), 255);
+    ui.hue1.output.textContent = `[${min_hue},${max_hue}]`;
+    const low = new cv.Mat(segmentation_state.hsv.rows, segmentation_state.hsv.cols, segmentation_state.hsv.type(), [min_hue, 0, 0, 0]);
+    const high = new cv.Mat(segmentation_state.hsv.rows, segmentation_state.hsv.cols, segmentation_state.hsv.type(), [max_hue, 255, 255, 255]);
+    cv.inRange(segmentation_state.hsv, low, high, segmentation_state.mask_hue1);
+
+    // write output
+    cv.cvtColor(segmentation_state.mask_hue1, segmentation_state.dst, cv.COLOR_GRAY2BGR);
     cv.imshow("canvas_segmented_output", segmentation_state.dst);
 
     // schedule next function call
     const delay = 1000/fps - (Date.now() - begin);
     segmentation_state.timer_id = setTimeout(process_video_hsv_segmentation, delay);
+
+    delete low;
+    delete high;
 }
